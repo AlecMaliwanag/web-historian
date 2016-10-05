@@ -25,17 +25,47 @@ exports.initialize = function(pathsObj) {
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function() {
+exports.readListOfUrls = function(callback) {
+  fs.readFile(exports.paths.list, 'utf8', function(err, data) {
+    callback(data.split('\n'));
+  });
 };
 
-exports.isUrlInList = function() {
+exports.isUrlInList = function(url, callback) {
+  exports.readListOfUrls(function(data) {
+    var flag = false; // TODO why doesn't data.includes work here?
+    for (var i = 0; i < data.length; i++) {
+      if (data[i] === url) {
+        flag = true;
+      }
+    }
+
+    callback(flag);
+  });
 };
 
-exports.addUrlToList = function() {
+exports.addUrlToList = function(url, callback) {
+  fs.appendFile(exports.paths.list, url, 'utf8', function(err) {
+    callback();
+    if (err) {
+      console.log(err);
+    }
+  });
 };
 
-exports.isUrlArchived = function() {
+exports.isUrlArchived = function(url, callback) {
+  fs.readFile(exports.paths.archivedSites + '/' + url, 'utf8', function(err, data) {
+    callback(!!data);
+  }); 
 };
 
-exports.downloadUrls = function() {
+exports.downloadUrls = function(list) {
+  _.each(list, function(url, index) {
+    var temp = 'temp';
+    fs.writeFile(exports.paths.archivedSites + '/' + url, temp, 'utf8', function(err) {
+      if (err) {
+        console.log(err);
+      }
+    });
+  }); // TODO actually get GET request
 };
