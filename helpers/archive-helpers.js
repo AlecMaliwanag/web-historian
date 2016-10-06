@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var http = require('http'); // TODO what if HTTPS request?
 var _ = require('underscore');
 
 /*
@@ -58,11 +59,26 @@ exports.isUrlArchived = function(url, callback) {
 
 exports.downloadUrls = function(list) {
   _.each(list, function(url, index) {
-    var temp = 'temp';
-    fs.writeFile(exports.paths.archivedSites + '/' + url, temp, 'utf8', function(err) {
-      if (err) {
-        console.log(err);
-      }
-    });
-  }); // TODO actually get GET request
+    var options = {
+      host: url
+    };
+
+    http.request(options, function(response) {
+      // console.log('response: ' + response);
+      var str = '';
+      response.on('data', function (chunk) {
+        str += chunk;
+      });
+
+      response.on('end', function () {
+        fs.writeFile(exports.paths.archivedSites + '/' + url, str, 'utf8', function(err) {
+          if (err) {
+            console.log(err);
+          }
+        });
+      });
+    }).end();
+  });
 };
+
+exports.downloadUrls(['www.google.com']);
