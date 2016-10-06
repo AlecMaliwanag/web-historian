@@ -32,7 +32,7 @@ exports.isUrlInList = function(url, callback) {
   exports.readListOfUrls(function(data) {
     var flag = false; // TODO why doesn't data.includes work here?
     for (var i = 0; i < data.length; i++) {
-      if (data[i] === url) {
+      if (data[i] === url) { // TODO revisit, stringify?
         flag = true;
       }
     }
