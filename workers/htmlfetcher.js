@@ -1,6 +1,11 @@
-// Use the code in `archive-helpers.js` to actually download the urls
-// that are waiting.
+var archive = require('../helpers/archive-helpers');
 
-// compare list and archive
-// generate different as a list
-// download all the files in that list
+archive.readListOfUrls(function(urls) {
+  urls.forEach(function(singleUrl) {
+    archive.isUrlArchived(singleUrl, function(flag) {
+      if (!flag) {
+        archive.downloadUrls([singleUrl]); 
+      }
+    });
+  });
+});

@@ -21,7 +21,7 @@ var handleGETRequest = function(req, res) {
 
   // Serve them archives
   } else {
-    archive.isUrlArchived(req.url, function(result) {
+    archive.isUrlArchived(req.url.slice(1), function(result) {
       if (result) {
         fs.readFile(archive.paths.archivedSites + '/' + req.url, 'utf8', function(err, data) {
           if (err) {
@@ -66,8 +66,8 @@ var handlePOSTRequest = function(req, res) {
         // if it's not in the list, then add it to the list
         console.log(url + ' is not in list, so adding to the list');
         archive.addUrlToList(url, function(url) {
-          res.writeHead(302, httpHelpers.headers);
-          res.end();
+          res.writeHead(208, httpHelpers.headers); // 208 => already reported
+          serveStaticFiles('loading.html', res); 
         });
       }
     });

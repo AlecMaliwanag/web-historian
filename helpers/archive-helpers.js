@@ -3,20 +3,12 @@ var path = require('path');
 var http = require('http'); // TODO what if HTTPS request?
 var _ = require('underscore');
 
-/*
- * You will need to reuse the same paths many times over in the course of this sprint.
- * Consider using the `paths` object below to store frequently used file paths. This way,
- * if you move any files, you'll only need to change your code in one place! Feel free to
- * customize it in any way you wish.
- */
-
 exports.paths = {
   siteAssets: path.join(__dirname, '../web/public'),
   archivedSites: path.join(__dirname, '../archives/sites'),
   list: path.join(__dirname, '../archives/sites.txt')
 };
 
-// Used for stubbing paths for tests, do not modify
 exports.initialize = function(pathsObj) {
   _.each(pathsObj, function(path, type) {
     exports.paths[type] = path;
@@ -25,7 +17,8 @@ exports.initialize = function(pathsObj) {
 
 exports.readListOfUrls = function(callback) {
   fs.readFile(exports.paths.list, 'utf8', function(err, data) {
-    callback(data.split('\n'));
+    var temp = data.trim().split('\n'); // !!! need to trim
+    callback(temp);
   });
 };
 
@@ -44,7 +37,7 @@ exports.isUrlInList = function(url, callback) {
 
 exports.addUrlToList = function(url, callback) {
   fs.appendFile(exports.paths.list, url + '\n', 'utf8', function(err) {
-    callback(url); // NOTE did not pass new line back to callback
+    callback(url);
     if (err) {
       console.log(err);
     }
@@ -52,8 +45,16 @@ exports.addUrlToList = function(url, callback) {
 };
 
 exports.isUrlArchived = function(url, callback) {
-  fs.readFile(exports.paths.archivedSites + '/' + url, 'utf8', function(err, data) {
-    callback(!!data);
+  var path = exports.paths.archivedSites;
+  fs.readdir(path, function(err, files) {  // Learning: need to use readdir instead of readFile
+    var flag = false;
+    for (var i = 0; i < files.length; i++) {
+      if (files[i] === url) {
+        flag = true;
+      }
+    }
+    console.log(url);
+    callback(flag);
   }); 
 };
 
@@ -63,8 +64,7 @@ exports.downloadUrls = function(list) {
       host: url
     };
 
-    http.request(options, function(response) {
-      // console.log('response: ' + response);
+    http.request(options, function(response) { // !!!!! this is wrong
       var str = '';
       response.on('data', function (chunk) {
         str += chunk;
@@ -80,5 +80,3 @@ exports.downloadUrls = function(list) {
     }).end();
   });
 };
-
-exports.downloadUrls(['www.google.com']);
