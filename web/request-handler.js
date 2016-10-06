@@ -3,34 +3,52 @@ var archive = require('../helpers/archive-helpers');
 var fs = require('fs');
 var httpHelpers = require('./http-helpers');
 
-// require more modules/folders here!
 var handleGETRequest = function(req, res) {
-  console.log('get request handled');
-  fs.readFile(archive.paths.siteAssets + '/index.html', 'utf8', function(err, data) { // options -> encoding
-    if (err) {
-      console.log(err, 'error'); // TODO find the proper way to handle GET errors
-    } else {
-      // httpHelpers.serveAssets(res, data.toString(), ) // TODO come back to this
-      // console.log(data, 'data');
-      res.end(data); // this can handle a string
-    }
-  });
+  // Serve them index.html
+  if (req.url === '/') {
+    fs.readFile(archive.paths.siteAssets + '/index.html', 'utf8', function(err, data) { // options -> encoding
+      if (err) {
+        console.log(err, 'error'); // TODO find the proper way to handle GET errors
+      } else {
+        res.end(data); // this can handle a string
+      }
+    });
 
+  // Serve them archives
+  } else {
+    archive.isUrlArchived(req.url, function(result) {
+      if (result) {
+        fs.readFile(archive.paths.archivedSites + '/' + req.url, 'utf8', function(err, data) {
+          if (err) {
+            console.log('error reading file', err);
+          } else {
+            res.end(data);
+          }
+        });
+      } else {
+        res.writeHead(404, httpHelpers.headers);
+        res.end();
+      }
+    });
+  } 
+};
+
+var handlePOSTRequest = function(req, res) {
+  var actualData = req.on('data', function(data) { // get FORM data from POST
+    var url = data.slice(4); // TODO maybe check if URL is archived?
+    archive.addUrlToList(url, function(url) {
+      res.writeHead(302, httpHelpers.headers);
+      res.end();
+    });
+  });
 };
 
 exports.handleRequest = function (req, res) {
-  // router
-
-  // if get request, serve index
   if (req.method === 'GET') {
     handleGETRequest(req, res);
   } else if (req.method === 'POST') {
     handlePOSTRequest(req, res);
-  } else {
-    //handle
-    return;
+  } else { // TODO handle other cases
+    res.end(archive.paths.list);
   }
-  // if post request, do something
-
-  //res.end(archive.paths.list);
 };
